@@ -1,0 +1,47 @@
+1. Bagian ini terjadi saat membuka OutputStream dari MediaStore menggunakan URI yang sudah digenerate, lalu bitmap foto akan ditulis ke sana.
+Berikut potongan kodenya yang terletak di MainActivity.kt.
+
+val imageUri = contentResolver.insert(
+    mediaContentHelper.getImageContentUri(),
+    mediaContentHelper.generateImageContentValues(fileInfo)
+)
+
+val outputStream = imageUri?.let { contentResolver.openOutputStream(it) }
+bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+outputStream?.close()
+
+2. Atribut pertama: uri
+uri adalah lokasi tujuan di MediaStore tempat file akan disimpan.
+Biasanya berupa:
+- MediaStore.Images.Media.getContentUri(...) → untuk foto
+- MediaStore.Video.Media.getContentUri(...) → untuk video
+Jadi, URI ini menentukan jenis media dan database penyimpanan yang akan dipakai.
+
+Atribut keempat: relativePath
+relativePath adalah folder di dalam penyimpanan internal (bukan path absolut).
+Contoh:
+Pictures/MyApp/
+DCIM/Camera/
+Movies/MyAppVideo/
+
+3. Urutan:
+1. User menekan tombol capture:
+Aplikasi mempersiapkan ContentValues (nama file, folder, MIME type) dan mendapatkan URI tujuan dari MediaStore.
+
+2. Aplikasi memanggil contentResolver.insert()
+Android membuat slot entry baru di MediaStore dan mengembalikan sebuah URI unik tempat foto akan ditulis.
+
+3. Kamera mengambil gambar
+Hasil foto diberikan kembali ke aplikasi dalam bentuk Bitmap atau stream.
+
+4. Aplikasi membuka OutputStream berdasarkan URI
+Menggunakan contentResolver.openOutputStream(uri), aplikasi menyiapkan “pipa” untuk menulis data ke MediaStore.
+
+5. Foto ditulis ke MediaStore
+Bitmap dikompres dan ditulis ke OutputStream yang terhubung ke URI.
+
+6. OutputStream ditutup
+Setelah selesai, Android menyelesaikan penulisan dan file resmi tersimpan di folder yang sesuai (relativePath).
+
+7. File akan muncul di Galeri
+Karena MediaStore telah mengindeks file tersebut, aplikasi Galeri bisa langsung menampilkannya.
